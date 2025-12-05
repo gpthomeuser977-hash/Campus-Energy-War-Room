@@ -1,0 +1,835 @@
+﻿<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Campus Energy War Room | 校園能源戰情室</title>
+  <link rel="stylesheet" href="power_dashboard/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .date-range-picker {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: rgba(30, 41, 59, 0.6);
+      padding: 12px 20px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .date-range-picker label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+
+    .date-range-picker input[type="date"] {
+      background: rgba(51, 65, 85, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .date-range-picker select {
+      background: rgba(51, 65, 85, 0.8);
+      border: 1px solid var(--border-color);
+      color: var(--text-primary);
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .date-range-picker span {
+      color: var(--text-muted);
+    }
+
+    .date-range-picker .apply-btn {
+      background: linear-gradient(135deg, #3b82f6, #2563eb);
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .date-range-picker .apply-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+    }
+
+    .date-range-display {
+      color: var(--text-primary);
+      font-size: 0.85rem;
+      margin-left: auto;
+      background: rgba(59, 130, 246, 0.2);
+      padding: 6px 12px;
+      border-radius: 6px;
+    }
+
+    .granularity-selector {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .granularity-selector label {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .metric-value-group {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 4px;
+    }
+
+    .metric-status {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-weight: 500;
+    }
+
+    .metric-status.excellent {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+
+    .metric-status.good {
+      background: rgba(59, 130, 246, 0.2);
+      color: #3b82f6;
+    }
+
+    .metric-status.warning {
+      background: rgba(249, 115, 22, 0.2);
+      color: #f97316;
+    }
+
+    .metric-status.bad {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+
+    .overall-assessment {
+      margin-top: 16px;
+      padding: 16px;
+      background: rgba(30, 41, 59, 0.6);
+      border-radius: 12px;
+      border: 1px solid rgba(148, 163, 184, 0.1);
+    }
+
+    .assessment-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .assessment-icon {
+      font-size: 1.2rem;
+    }
+
+    .assessment-title {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+
+    .assessment-result {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 12px;
+      border-radius: 8px;
+      text-align: center;
+    }
+
+    .assessment-result.excellent {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.2));
+      border: 1px solid rgba(34, 197, 94, 0.4);
+    }
+
+    .assessment-result.good {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(37, 99, 235, 0.2));
+      border: 1px solid rgba(59, 130, 246, 0.4);
+    }
+
+    .assessment-result.warning {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(234, 88, 12, 0.2));
+      border: 1px solid rgba(249, 115, 22, 0.4);
+    }
+
+    .assessment-result.bad {
+      background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.2));
+      border: 1px solid rgba(239, 68, 68, 0.4);
+    }
+
+    .assessment-status {
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .assessment-result.excellent .assessment-status {
+      color: #22c55e;
+    }
+
+    .assessment-result.good .assessment-status {
+      color: #3b82f6;
+    }
+
+    .assessment-result.warning .assessment-status {
+      color: #f97316;
+    }
+
+    .assessment-result.bad .assessment-status {
+      color: #ef4444;
+    }
+
+    .assessment-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+  </style>
+</head>
+
+<body>
+  <div class="dashboard theme-teaching" id="dashboard">
+    <header class="dashboard-header">
+      <h1 class="dashboard-title">🏢 Campus Energy War Room</h1>
+      <p class="dashboard-subtitle">校園能源戰情室 - 即時監控、智慧預測、優化調度</p>
+    </header>
+
+    <section class="building-selector" id="buildingSelector">
+      <button class="building-btn teaching active" data-building="teaching" onclick="selectBuilding('teaching')">
+        <div class="building-icon">🏫</div>
+        <div class="building-info">
+          <h3>教學大樓</h3><span>Teaching Building</span>
+        </div>
+      </button>
+      <button class="building-btn office" data-building="office" onclick="selectBuilding('office')">
+        <div class="building-icon">🏢</div>
+        <div class="building-info">
+          <h3>辦公大樓</h3><span>Office Building</span>
+        </div>
+      </button>
+      <button class="building-btn mixed" data-building="mixed" onclick="selectBuilding('mixed')">
+        <div class="building-icon">🏗️</div>
+        <div class="building-info">
+          <h3>混合用途大樓</h3><span>Mixed-Use Building</span>
+        </div>
+      </button>
+    </section>
+
+    <section class="kpi-section">
+      <h2 class="section-title">即時能源概況 Real-Time Overview</h2>
+      <div class="kpi-grid">
+        <div class="kpi-card load">
+          <div class="kpi-header"><span class="kpi-label">即時負載 Load</span>
+            <div class="kpi-icon">⚡</div>
+          </div>
+          <div class="kpi-value"><span id="currentLoad">312</span> <span class="kpi-unit">kW</span></div>
+          <div class="kpi-details">
+            <div class="kpi-detail-row"><span class="detail-label">今日尖峰 Peak Today</span><span class="detail-value"
+                id="peakLoad">402 kW @ 14:32</span></div>
+          </div>
+          <div class="status-bar"><span class="status-dot green" id="loadStatusDot"></span><span
+              class="status-text green" id="loadStatusText">正常運轉 Normal</span></div>
+        </div>
+        <div class="kpi-card pv">
+          <div class="kpi-header"><span class="kpi-label">太陽能發電 PV Output</span>
+            <div class="kpi-icon">☀️</div>
+          </div>
+          <div class="kpi-value"><span id="pvOutput">112</span> <span class="kpi-unit">kW</span></div>
+          <div class="kpi-details">
+            <div class="kpi-detail-row"><span class="detail-label">今日累積 Daily Total</span><span class="detail-value"
+                id="pvTotal">346 kWh</span></div>
+            <div class="kpi-detail-row"><span class="detail-label">自用率 Self-Use</span><span class="detail-value"
+                id="pvSelfUse">74%</span></div>
+          </div>
+        </div>
+        <div class="kpi-card bess">
+          <div class="kpi-header"><span class="kpi-label">儲能系統 BESS</span>
+            <div class="kpi-icon">🔋</div>
+          </div>
+          <div class="soc-gauge-container">
+            <div class="soc-gauge">
+              <svg width="100" height="100" viewBox="0 0 100 100">
+                <circle class="soc-gauge-bg" cx="50" cy="50" r="40"></circle>
+                <circle class="soc-gauge-fill" id="socGauge" cx="50" cy="50" r="40"></circle>
+              </svg>
+              <div class="soc-value" id="socValue">64%</div>
+            </div>
+            <div class="soc-info">
+              <div class="kpi-value"><span id="besspower">+28</span> <span class="kpi-unit">kW</span></div>
+              <div class="detail-label" id="bessMode">放電中 Discharging</div>
+            </div>
+          </div>
+          <div class="kpi-details">
+            <div class="kpi-detail-row"><span class="detail-label">今日循環深度 Cycle Depth</span><span class="detail-value"
+                id="cycleDepth">42%</span></div>
+          </div>
+          <div class="status-bar"><span class="status-dot green" id="bessStatusDot"></span><span
+              class="status-text green" id="bessStatusText">電量充足 Sufficient</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="trends-section">
+      <h2 class="section-title">歷史趨勢 Historical Trends</h2>
+      <div class="time-selector" id="timeSelector">
+        <button class="time-btn" data-range="1h" onclick="selectTimeRange('1h')">過去 1 小時</button>
+        <button class="time-btn active" data-range="3h" onclick="selectTimeRange('3h')">過去 3 小時</button>
+        <button class="time-btn" data-range="24h" onclick="selectTimeRange('24h')">過去 24 小時</button>
+        <button class="time-btn" data-range="7d" onclick="selectTimeRange('7d')">過去 7 天</button>
+        <button class="time-btn" data-range="1m" onclick="selectTimeRange('1m')">過去 1 月</button>
+      </div>
+      <div class="trends-grid">
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background: var(--load-color);"></span>負載歷史曲線 Load Trend
+          </div>
+          <div class="chart-container"><canvas id="loadTrendChart"></canvas></div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-line" style="background: #3B82F6;"></span>負載功率 Load (kW)</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background: var(--pv-color);"></span>太陽能發電曲線 PV Output Trend
+          </div>
+          <div class="chart-container"><canvas id="pvTrendChart"></canvas></div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-line" style="background: #facc15;"></span>太陽能發電 PV (kW)</div>
+          </div>
+        </div>
+        <div class="chart-card">
+          <div class="chart-title"><span class="dot" style="background: var(--bess-soc);"></span>儲能充放電與 SoC BESS Trend
+          </div>
+          <div class="chart-container"><canvas id="bessTrendChart"></canvas></div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-bar" style="background: #f97316;"></span>放電 Discharge (kW)
+            </div>
+            <div class="legend-item"><span class="legend-bar" style="background: #3B82F6;"></span>充電 Charge (kW)</div>
+            <div class="legend-item"><span class="legend-line" style="background: #22c55e;"></span>電量狀態 SoC (%)</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="lstm-section">
+      <h2 class="section-title">🔥 LSTM 預測 vs 實際 Load Forecast vs Actual</h2>
+      <div class="date-range-picker" id="lstmDatePicker">
+        <label>📅 日期範圍:</label>
+        <input type="date" id="lstmStartDate"><span>至</span><input type="date" id="lstmEndDate">
+        <div class="granularity-selector">
+          <label>⏱️ 顆粒度:</label>
+          <select id="lstmGranularity" onchange="applyLSTMDateRange()">
+            <option value="15min">15 分鐘</option>
+            <option value="hourly">每小時</option>
+            <option value="daily" selected>每日</option>
+            <option value="weekly">每週</option>
+          </select>
+        </div>
+        <button class="apply-btn" onclick="applyLSTMDateRange()">套用 Apply</button>
+        <span class="date-range-display" id="lstmRangeDisplay">顯示最近 7 天</span>
+      </div>
+      <div class="lstm-grid">
+        <div class="lstm-chart-card">
+          <div class="lstm-chart-header">
+            <span class="lstm-chart-title">預測 vs 實際負載曲線</span>
+            <span class="forecast-badge">預測未來 60 分鐘</span>
+          </div>
+          <div class="lstm-chart-container"><canvas id="lstmChart"></canvas></div>
+          <div class="legend">
+            <div class="legend-item"><span class="legend-line actual"></span><span>實際負載 Actual</span></div>
+            <div class="legend-item"><span class="legend-line predicted"></span><span>LSTM 預測 Predicted</span></div>
+          </div>
+        </div>
+        <div class="metrics-card">
+          <h3 class="metrics-title">📊 預測誤差指標 Error Metrics</h3>
+          <div class="metrics-table">
+            <div class="metric-row">
+              <div class="metric-info"><span class="metric-name">MAE</span><span class="metric-desc">平均誤差 Mean Absolute
+                  Error</span></div>
+              <div class="metric-value-group">
+                <span class="metric-value" id="maeValue">6.2 kW</span>
+                <span class="metric-status good" id="maeStatus">✓ 正常</span>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-info"><span class="metric-name">RMSE</span><span class="metric-desc">均方根誤差 Root Mean
+                  Square Error</span></div>
+              <div class="metric-value-group">
+                <span class="metric-value" id="rmseValue">9.8 kW</span>
+                <span class="metric-status good" id="rmseStatus">✓ 正常</span>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-info"><span class="metric-name">MAPE</span><span class="metric-desc">百分比誤差 Mean
+                  Absolute Percentage Error</span></div>
+              <div class="metric-value-group">
+                <span class="metric-value" id="mapeValue">3.5%</span>
+                <span class="metric-status excellent" id="mapeStatus">★ 優秀</span>
+              </div>
+            </div>
+            <div class="metric-row">
+              <div class="metric-info"><span class="metric-name">Bias</span><span class="metric-desc">預測偏差 Prediction
+                  Bias</span></div>
+              <div class="metric-value-group">
+                <span class="metric-value positive" id="biasValue">+1.8 kW</span>
+                <span class="metric-status good" id="biasStatus">✓ 正常</span>
+              </div>
+            </div>
+          </div>
+          <div class="overall-assessment" id="overallAssessment">
+            <div class="assessment-header">
+              <span class="assessment-icon">🎯</span>
+              <span class="assessment-title">綜合評估 Overall Assessment</span>
+            </div>
+            <div class="assessment-result good" id="assessmentResult">
+              <span class="assessment-status" id="assessmentStatus">✓ 預測模型表現正常</span>
+              <span class="assessment-desc" id="assessmentDesc">Model Performance: Normal</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="benefits-section">
+      <h2 class="section-title">💰 效益分析 Benefits & Savings</h2>
+      <div class="date-range-picker" id="savingsDatePicker">
+        <label>📅 日期範圍:</label>
+        <input type="date" id="savingsStartDate"><span>至</span><input type="date" id="savingsEndDate">
+        <div class="granularity-selector">
+          <label>⏱️ 顆粒度:</label>
+          <select id="savingsGranularity" onchange="applySavingsDateRange()">
+            <option value="hourly">每小時</option>
+            <option value="daily" selected>每日</option>
+            <option value="weekly">每週</option>
+            <option value="monthly">每月</option>
+          </select>
+        </div>
+        <button class="apply-btn" onclick="applySavingsDateRange()">套用 Apply</button>
+        <span class="date-range-display" id="savingsRangeDisplay">顯示最近 7 天</span>
+      </div>
+      <div class="benefits-grid">
+        <div class="savings-cards">
+          <div class="savings-card electricity">
+            <div class="savings-icon">⚡</div>
+            <div class="savings-info"><span class="savings-label">節省電量 Energy Saved</span><span class="savings-value"
+                id="energySaved">428</span><span class="savings-unit">kWh</span></div>
+            <div class="savings-period" id="savingsPeriod">今日 Today</div>
+          </div>
+          <div class="savings-card money">
+            <div class="savings-icon">💵</div>
+            <div class="savings-info"><span class="savings-label">節省電費 Cost Saved</span><span class="savings-value"
+                id="costSaved">1,284</span><span class="savings-unit">NTD</span></div>
+            <div class="savings-rate">@ 3.0 NTD/kWh</div>
+          </div>
+          <div class="savings-card carbon">
+            <div class="savings-icon">🌱</div>
+            <div class="savings-info"><span class="savings-label">減碳量 CO₂ Reduced</span><span class="savings-value"
+                id="carbonReduced">214</span><span class="savings-unit">kg</span></div>
+            <div class="savings-rate">@ 0.5 kg/kWh</div>
+          </div>
+        </div>
+        <div class="chart-card savings-chart-card">
+          <div class="chart-title"><span class="dot"
+              style="background: linear-gradient(135deg, #22c55e, #14b8a6);"></span>節省來源分析 Savings Breakdown</div>
+          <div class="chart-container" style="height: 280px;"><canvas id="savingsChart"></canvas></div>
+          <div class="savings-legend">
+            <div class="legend-item"><span class="legend-dot" style="background: #facc15;"></span>太陽能自用 PV Self-Use
+            </div>
+            <div class="legend-item"><span class="legend-dot" style="background: #22c55e;"></span>儲能削峰 BESS Peak Shaving
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const buildingData = {
+      teaching: { load: { current: 312, peak: '402 kW @ 14:32', status: 'green', statusText: '正常運轉 Normal' }, pv: { current: 112, total: '346 kWh', selfUse: '74%' }, bess: { power: '+28', mode: '放電中 Discharging', soc: 64, cycleDepth: '42%', status: 'green', statusText: '電量充足 Sufficient' } },
+      office: { load: { current: 458, peak: '512 kW @ 11:15', status: 'orange', statusText: '偏高 Elevated' }, pv: { current: 86, total: '278 kWh', selfUse: '68%' }, bess: { power: '-35', mode: '充電中 Charging', soc: 45, cycleDepth: '38%', status: 'orange', statusText: '電量中等 Moderate' } },
+      mixed: { load: { current: 287, peak: '356 kW @ 13:45', status: 'green', statusText: '正常運轉 Normal' }, pv: { current: 134, total: '412 kWh', selfUse: '82%' }, bess: { power: '+42', mode: '放電中 Discharging', soc: 78, cycleDepth: '35%', status: 'green', statusText: '電量充足 Sufficient' } }
+    };
+
+    const metricThresholds = {
+      mae: { excellent: 5, good: 10, warning: 15 },
+      rmse: { excellent: 8, good: 15, warning: 22 },
+      mape: { excellent: 3, good: 5, warning: 8 },
+      bias: { excellent: 2, good: 5, warning: 10 }
+    };
+
+    let currentBuilding = 'teaching';
+    let currentTimeRange = '3h';
+    let lstmDateRange = { start: null, end: null };
+    let savingsDateRange = { start: null, end: null };
+    let lstmGranularity = 'daily';
+    let savingsGranularity = 'daily';
+    let charts = {};
+
+    function evaluateMetric(type, value) {
+      const thresh = metricThresholds[type];
+      const absVal = Math.abs(value);
+      if (absVal <= thresh.excellent) return { status: 'excellent', text: '★ 優秀', textEn: 'Excellent' };
+      if (absVal <= thresh.good) return { status: 'good', text: '✓ 正常', textEn: 'Normal' };
+      if (absVal <= thresh.warning) return { status: 'warning', text: '⚠ 偏高', textEn: 'Elevated' };
+      return { status: 'bad', text: '✗ 異常', textEn: 'Abnormal' };
+    }
+
+    function updateMetricStatus(metrics) {
+      const maeEval = evaluateMetric('mae', metrics.mae);
+      const rmseEval = evaluateMetric('rmse', metrics.rmse);
+      const mapeEval = evaluateMetric('mape', metrics.mape);
+      const biasEval = evaluateMetric('bias', metrics.bias);
+      document.getElementById('maeStatus').className = 'metric-status ' + maeEval.status;
+      document.getElementById('maeStatus').textContent = maeEval.text;
+      document.getElementById('rmseStatus').className = 'metric-status ' + rmseEval.status;
+      document.getElementById('rmseStatus').textContent = rmseEval.text;
+      document.getElementById('mapeStatus').className = 'metric-status ' + mapeEval.status;
+      document.getElementById('mapeStatus').textContent = mapeEval.text;
+      document.getElementById('biasStatus').className = 'metric-status ' + biasEval.status;
+      document.getElementById('biasStatus').textContent = biasEval.text;
+      const scores = { excellent: 4, good: 3, warning: 2, bad: 1 };
+      const avgScore = (scores[maeEval.status] + scores[rmseEval.status] + scores[mapeEval.status] + scores[biasEval.status]) / 4;
+      let overall, overallText, overallDesc;
+      if (avgScore >= 3.5) { overall = 'excellent'; overallText = '★ 預測模型表現優秀'; overallDesc = 'Model Performance: Excellent'; }
+      else if (avgScore >= 2.5) { overall = 'good'; overallText = '✓ 預測模型表現正常'; overallDesc = 'Model Performance: Normal'; }
+      else if (avgScore >= 1.5) { overall = 'warning'; overallText = '⚠ 預測模型需要關注'; overallDesc = 'Model Performance: Needs Attention'; }
+      else { overall = 'bad'; overallText = '✗ 預測模型表現異常'; overallDesc = 'Model Performance: Abnormal'; }
+      document.getElementById('assessmentResult').className = 'assessment-result ' + overall;
+      document.getElementById('assessmentStatus').textContent = overallText;
+      document.getElementById('assessmentDesc').textContent = overallDesc;
+    }
+
+    function initDatePickers() {
+      const today = new Date(), weekAgo = new Date(today - 7 * 24 * 60 * 60 * 1000);
+      const formatDate = d => d.toISOString().split('T')[0];
+      document.getElementById('lstmStartDate').value = formatDate(weekAgo);
+      document.getElementById('lstmEndDate').value = formatDate(today);
+      document.getElementById('savingsStartDate').value = formatDate(weekAgo);
+      document.getElementById('savingsEndDate').value = formatDate(today);
+      lstmDateRange = { start: weekAgo, end: today };
+      savingsDateRange = { start: weekAgo, end: today };
+    }
+
+    function generateTimeLabels(range) {
+      const labels = [], now = new Date();
+      switch (range) {
+        case '1h': for (let i = 11; i >= 0; i--) labels.push('-' + (i * 5) + '分'); break;
+        case '3h': for (let i = 17; i >= 0; i--) { const t = new Date(now - i * 10 * 60 * 1000); labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0')); } break;
+        case '24h': for (let i = 23; i >= 0; i--) { const t = new Date(now - i * 60 * 60 * 1000); labels.push(t.getHours().toString().padStart(2, '0') + ':00'); } break;
+        case '7d': for (let i = 6; i >= 0; i--) { const d = new Date(now - i * 24 * 60 * 60 * 1000); labels.push((d.getMonth() + 1) + '/' + d.getDate()); } break;
+        case '1m': for (let i = 29; i >= 0; i--) { const d = new Date(now - i * 24 * 60 * 60 * 1000); labels.push((d.getMonth() + 1) + '/' + d.getDate()); } break;
+        default: for (let i = 17; i >= 0; i--) { const t = new Date(now - i * 10 * 60 * 1000); labels.push(t.getHours().toString().padStart(2, '0') + ':' + t.getMinutes().toString().padStart(2, '0')); }
+      }
+      return labels;
+    }
+
+    function generateLabelsForGranularity(startDate, endDate, granularity) {
+      const labels = [], start = new Date(startDate), end = new Date(endDate);
+      const diffMs = end - start;
+      const diffDays = Math.ceil(diffMs / (24 * 60 * 60 * 1000));
+      const diffHours = Math.ceil(diffMs / (60 * 60 * 1000));
+
+      switch (granularity) {
+        case '15min':
+          const intervals15 = Math.min(Math.ceil(diffHours * 4), 96); // Max 96 (24hr)
+          for (let i = 0; i < intervals15; i++) {
+            const d = new Date(start.getTime() + i * 15 * 60 * 1000);
+            labels.push(d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0'));
+          }
+          break;
+        case 'hourly':
+          const hours = Math.min(diffHours, 168); // Max 168 (7 days)
+          for (let i = 0; i <= hours; i++) {
+            const d = new Date(start.getTime() + i * 60 * 60 * 1000);
+            if (diffDays <= 2) {
+              labels.push(d.getHours().toString().padStart(2, '0') + ':00');
+            } else {
+              labels.push((d.getMonth() + 1) + '/' + d.getDate() + ' ' + d.getHours().toString().padStart(2, '0') + ':00');
+            }
+          }
+          break;
+        case 'daily':
+          for (let i = 0; i <= diffDays; i++) {
+            const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+            labels.push((d.getMonth() + 1) + '/' + d.getDate());
+          }
+          break;
+        case 'weekly':
+          const weeks = Math.ceil(diffDays / 7);
+          for (let i = 0; i <= weeks; i++) {
+            const d = new Date(start.getTime() + i * 7 * 24 * 60 * 60 * 1000);
+            labels.push('W' + getWeekNumber(d) + ' (' + (d.getMonth() + 1) + '/' + d.getDate() + ')');
+          }
+          break;
+        case 'monthly':
+          let current = new Date(start);
+          while (current <= end) {
+            labels.push(current.getFullYear() + '/' + (current.getMonth() + 1));
+            current.setMonth(current.getMonth() + 1);
+          }
+          break;
+        default:
+          for (let i = 0; i <= diffDays; i++) {
+            const d = new Date(start.getTime() + i * 24 * 60 * 60 * 1000);
+            labels.push((d.getMonth() + 1) + '/' + d.getDate());
+          }
+      }
+      return labels;
+    }
+
+    function getWeekNumber(d) {
+      d = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+      d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7));
+      const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+      return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+    }
+
+    function generateTrendData(building, range, type) {
+      const baseValues = { teaching: { load: 300, pv: 100, bess: 30 }, office: { load: 450, pv: 80, bess: 25 }, mixed: { load: 280, pv: 120, bess: 35 } };
+      const base = baseValues[building][type];
+      const count = range === '1h' ? 12 : range === '3h' ? 18 : range === '24h' ? 24 : range === '7d' ? 7 : 30;
+      return Array.from({ length: count }, (_, i) => Math.max(0, Math.round(base + Math.sin(i / 3) * (base * 0.2) + (Math.random() - 0.5) * (base * 0.1))));
+    }
+
+    function generateBESSData(building, range) {
+      const baseValues = { teaching: 30, office: 25, mixed: 35 }, base = baseValues[building];
+      const count = range === '1h' ? 12 : range === '3h' ? 18 : range === '24h' ? 24 : range === '7d' ? 7 : 30;
+      const hour = new Date().getHours();
+      return Array.from({ length: count }, (_, i) => {
+        let currentHour = range === '24h' ? (hour - (23 - i) + 24) % 24 : 12;
+        const noise = (Math.random() - 0.5) * (base * 0.3);
+        if (currentHour >= 9 && currentHour <= 18) return Math.round(base * (0.6 + Math.random() * 0.8) + noise);
+        else if (currentHour >= 22 || currentHour <= 6) return Math.round(-base * (0.5 + Math.random() * 0.6) + noise);
+        else return Math.round((Math.random() - 0.5) * base * 0.4 + noise);
+      });
+    }
+
+    function generateLSTMDataForGranularity(building, labels, granularity) {
+      const actual = [], predicted = [], baseLoad = building === 'teaching' ? 300 : building === 'office' ? 450 : 280;
+      const count = labels.length;
+      for (let i = 0; i < count; i++) {
+        let hourFactor;
+        if (granularity === '15min' || granularity === 'hourly') {
+          hourFactor = Math.sin((i / count) * Math.PI * 2 - Math.PI / 2);
+        } else {
+          hourFactor = Math.sin((i - count / 4) * Math.PI / (count / 2));
+        }
+        const actualVal = baseLoad + hourFactor * 100 + (Math.random() - 0.5) * 40;
+        actual.push(Math.round(actualVal));
+        predicted.push(Math.round(actualVal + (Math.random() - 0.5) * baseLoad * 0.1));
+      }
+      return { actual, predicted };
+    }
+
+    function generateSavingsDataForGranularity(building, labels, granularity) {
+      const baseEnergy = building === 'teaching' ? 60 : building === 'office' ? 80 : 70;
+      const count = labels.length;
+      const pvSelf = [], bessPeak = [];
+      let scaleFactor = 1;
+      if (granularity === 'hourly') scaleFactor = 0.1;
+      else if (granularity === '15min') scaleFactor = 0.025;
+      else if (granularity === 'weekly') scaleFactor = 7;
+      else if (granularity === 'monthly') scaleFactor = 30;
+
+      for (let i = 0; i < count; i++) {
+        pvSelf.push(Math.round(baseEnergy * 0.6 * (0.7 + Math.random() * 0.6) * scaleFactor));
+        bessPeak.push(Math.round(baseEnergy * 0.4 * (0.7 + Math.random() * 0.6) * scaleFactor));
+      }
+      return { pvSelf, bessPeak };
+    }
+
+    function generateMetrics(building) {
+      const base = building === 'teaching' ? 1 : building === 'office' ? 1.5 : 0.8;
+      return {
+        mae: (4 + Math.random() * 8) * base,
+        rmse: (6 + Math.random() * 12) * base,
+        mape: (2 + Math.random() * 5) * base,
+        bias: (Math.random() - 0.5) * 8 * base
+      };
+    }
+
+    function getGranularityText(granularity) {
+      const texts = { '15min': '15分鐘', 'hourly': '每小時', 'daily': '每日', 'weekly': '每週', 'monthly': '每月' };
+      return texts[granularity] || '每日';
+    }
+
+    function applyLSTMDateRange() {
+      const startInput = document.getElementById('lstmStartDate').value, endInput = document.getElementById('lstmEndDate').value;
+      if (!startInput || !endInput) return alert('請選擇日期範圍');
+      lstmDateRange.start = new Date(startInput);
+      lstmDateRange.end = new Date(endInput);
+      lstmGranularity = document.getElementById('lstmGranularity').value;
+      const diffDays = Math.ceil((lstmDateRange.end - lstmDateRange.start) / (24 * 60 * 60 * 1000));
+      document.getElementById('lstmRangeDisplay').textContent = `${startInput} ~ ${endInput} (${diffDays}天, ${getGranularityText(lstmGranularity)})`;
+      updateLSTMChart();
+      updateMetricsDisplay();
+    }
+
+    function applySavingsDateRange() {
+      const startInput = document.getElementById('savingsStartDate').value, endInput = document.getElementById('savingsEndDate').value;
+      if (!startInput || !endInput) return alert('請選擇日期範圍');
+      savingsDateRange.start = new Date(startInput);
+      savingsDateRange.end = new Date(endInput);
+      savingsGranularity = document.getElementById('savingsGranularity').value;
+      const diffDays = Math.ceil((savingsDateRange.end - savingsDateRange.start) / (24 * 60 * 60 * 1000));
+      document.getElementById('savingsRangeDisplay').textContent = `${startInput} ~ ${endInput} (${diffDays}天, ${getGranularityText(savingsGranularity)})`;
+      updateSavingsForDateRange();
+    }
+
+    function updateMetricsDisplay() {
+      const metrics = generateMetrics(currentBuilding);
+      document.getElementById('maeValue').textContent = metrics.mae.toFixed(1) + ' kW';
+      document.getElementById('rmseValue').textContent = metrics.rmse.toFixed(1) + ' kW';
+      document.getElementById('mapeValue').textContent = metrics.mape.toFixed(1) + '%';
+      const biasSign = metrics.bias >= 0 ? '+' : '';
+      document.getElementById('biasValue').textContent = biasSign + metrics.bias.toFixed(1) + ' kW';
+      document.getElementById('biasValue').className = metrics.bias >= 0 ? 'metric-value positive' : 'metric-value negative';
+      updateMetricStatus(metrics);
+    }
+
+    function updateLSTMChart() {
+      if (!charts.lstm || !lstmDateRange.start) return;
+      const labels = generateLabelsForGranularity(lstmDateRange.start, lstmDateRange.end, lstmGranularity);
+      const data = generateLSTMDataForGranularity(currentBuilding, labels, lstmGranularity);
+      charts.lstm.data.labels = labels;
+      charts.lstm.data.datasets[0].data = data.actual;
+      charts.lstm.data.datasets[1].data = data.predicted;
+      charts.lstm.update();
+    }
+
+    function updateSavingsForDateRange() {
+      if (!charts.savings || !savingsDateRange.start) return;
+      const labels = generateLabelsForGranularity(savingsDateRange.start, savingsDateRange.end, savingsGranularity);
+      const data = generateSavingsDataForGranularity(currentBuilding, labels, savingsGranularity);
+      charts.savings.data.labels = labels;
+      charts.savings.data.datasets[0].data = data.pvSelf;
+      charts.savings.data.datasets[1].data = data.bessPeak;
+      charts.savings.update();
+      const totalEnergy = data.pvSelf.reduce((a, b) => a + b, 0) + data.bessPeak.reduce((a, b) => a + b, 0);
+      const diffDays = Math.ceil((savingsDateRange.end - savingsDateRange.start) / (24 * 60 * 60 * 1000));
+      document.getElementById('energySaved').textContent = totalEnergy.toLocaleString();
+      document.getElementById('costSaved').textContent = Math.round(totalEnergy * 3.0).toLocaleString();
+      document.getElementById('carbonReduced').textContent = Math.round(totalEnergy * 0.5).toLocaleString();
+      document.getElementById('savingsPeriod').textContent = `${diffDays} 天`;
+    }
+
+    const chartOptions = {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 45, minRotation: 0 } },
+        y: { grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => v + ' kW' } }
+      }
+    };
+
+    function initCharts() {
+      charts.loadTrend = new Chart(document.getElementById('loadTrendChart'), {
+        type: 'line', data: { labels: generateTimeLabels(currentTimeRange), datasets: [{ data: generateTrendData(currentBuilding, currentTimeRange, 'load'), borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, tension: 0.4 }] }, options: chartOptions
+      });
+      charts.pvTrend = new Chart(document.getElementById('pvTrendChart'), {
+        type: 'line', data: { labels: generateTimeLabels(currentTimeRange), datasets: [{ data: generateTrendData(currentBuilding, currentTimeRange, 'pv'), borderColor: '#facc15', backgroundColor: 'rgba(250, 204, 21, 0.3)', borderWidth: 2, fill: true, tension: 0.4 }] }, options: chartOptions
+      });
+      charts.bessTrend = new Chart(document.getElementById('bessTrendChart'), {
+        type: 'bar', data: {
+          labels: generateTimeLabels(currentTimeRange), datasets: [
+            { type: 'bar', data: generateBESSData(currentBuilding, currentTimeRange), backgroundColor: ctx => ctx.raw >= 0 ? 'rgba(249, 115, 22, 0.7)' : 'rgba(59, 130, 246, 0.7)', borderRadius: 4 },
+            { type: 'line', data: Array.from({ length: generateTimeLabels(currentTimeRange).length }, () => 40 + Math.random() * 40), borderColor: '#22c55e', borderWidth: 2, tension: 0.4, yAxisID: 'y1' }
+          ]
+        }, options: { ...chartOptions, scales: { ...chartOptions.scales, y1: { position: 'right', min: 0, max: 100, grid: { display: false }, ticks: { color: '#22c55e', font: { size: 10 }, callback: v => v + '%' } } } }
+      });
+      const lstmLabels = generateLabelsForGranularity(lstmDateRange.start, lstmDateRange.end, lstmGranularity);
+      const lstmData = generateLSTMDataForGranularity(currentBuilding, lstmLabels, lstmGranularity);
+      charts.lstm = new Chart(document.getElementById('lstmChart'), {
+        type: 'line', data: {
+          labels: lstmLabels, datasets: [
+            { label: 'Actual', data: lstmData.actual, borderColor: '#3B82F6', backgroundColor: 'rgba(59, 130, 246, 0.1)', borderWidth: 2, fill: true, tension: 0.4 },
+            { label: 'Predicted', data: lstmData.predicted, borderColor: '#f97316', borderWidth: 2, borderDash: [5, 5], fill: false, tension: 0.4 }
+          ]
+        }, options: { ...chartOptions, plugins: { legend: { display: false } } }
+      });
+      const savingsLabels = generateLabelsForGranularity(savingsDateRange.start, savingsDateRange.end, savingsGranularity);
+      const savingsData = generateSavingsDataForGranularity(currentBuilding, savingsLabels, savingsGranularity);
+      charts.savings = new Chart(document.getElementById('savingsChart'), {
+        type: 'bar', data: {
+          labels: savingsLabels, datasets: [
+            { label: 'PV', data: savingsData.pvSelf, backgroundColor: 'rgba(250, 204, 21, 0.8)', borderRadius: 4 },
+            { label: 'BESS', data: savingsData.bessPeak, backgroundColor: 'rgba(34, 197, 94, 0.8)', borderRadius: 4 }
+          ]
+        }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { stacked: true, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#94a3b8', font: { size: 10 }, maxRotation: 45 } }, y: { stacked: true, grid: { color: 'rgba(148, 163, 184, 0.1)' }, ticks: { color: '#94a3b8', font: { size: 10 }, callback: v => v + ' kWh' } } } }
+      });
+    }
+
+    function updateKPICards(building) {
+      const data = buildingData[building];
+      document.getElementById('currentLoad').textContent = data.load.current;
+      document.getElementById('peakLoad').textContent = data.load.peak;
+      document.getElementById('loadStatusDot').className = 'status-dot ' + data.load.status;
+      document.getElementById('loadStatusText').className = 'status-text ' + data.load.status;
+      document.getElementById('loadStatusText').textContent = data.load.statusText;
+      document.getElementById('pvOutput').textContent = data.pv.current;
+      document.getElementById('pvTotal').textContent = data.pv.total;
+      document.getElementById('pvSelfUse').textContent = data.pv.selfUse;
+      document.getElementById('besspower').textContent = data.bess.power;
+      document.getElementById('bessMode').textContent = data.bess.mode;
+      document.getElementById('socValue').textContent = data.bess.soc + '%';
+      document.getElementById('cycleDepth').textContent = data.bess.cycleDepth;
+      document.getElementById('bessStatusDot').className = 'status-dot ' + data.bess.status;
+      document.getElementById('bessStatusText').className = 'status-text ' + data.bess.status;
+      document.getElementById('bessStatusText').textContent = data.bess.statusText;
+      document.getElementById('socGauge').style.strokeDashoffset = 2 * Math.PI * 40 - (data.bess.soc / 100) * 2 * Math.PI * 40;
+    }
+
+    function updateCharts() {
+      const labels = generateTimeLabels(currentTimeRange);
+      charts.loadTrend.data.labels = labels;
+      charts.loadTrend.data.datasets[0].data = generateTrendData(currentBuilding, currentTimeRange, 'load');
+      charts.loadTrend.update();
+      charts.pvTrend.data.labels = labels;
+      charts.pvTrend.data.datasets[0].data = generateTrendData(currentBuilding, currentTimeRange, 'pv');
+      charts.pvTrend.update();
+      charts.bessTrend.data.labels = labels;
+      charts.bessTrend.data.datasets[0].data = generateBESSData(currentBuilding, currentTimeRange);
+      charts.bessTrend.data.datasets[1].data = Array.from({ length: labels.length }, () => 40 + Math.random() * 40);
+      charts.bessTrend.update();
+    }
+
+    function selectBuilding(building) {
+      currentBuilding = building;
+      document.querySelectorAll('.building-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.building-btn.' + building).classList.add('active');
+      document.getElementById('dashboard').className = 'dashboard theme-' + building;
+      updateKPICards(building);
+      updateCharts();
+      updateLSTMChart();
+      updateMetricsDisplay();
+      updateSavingsForDateRange();
+    }
+
+    function selectTimeRange(range) {
+      currentTimeRange = range;
+      document.querySelectorAll('.time-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelector('.time-btn[data-range="' + range + '"]').classList.add('active');
+      updateCharts();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      initDatePickers();
+      initCharts();
+      updateKPICards(currentBuilding);
+      updateMetricsDisplay();
+    });
+  </script>
+</body>
+
+</html>
